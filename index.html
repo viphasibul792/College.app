@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HASIB BOSS Image Collage Studio</title>
+    <!-- pdf.js for rendering PDFs locally in the browser -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <!-- jsPDF for converting Images to High-Quality PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --accent-color: #00adb5;
+            --accent-hover: #007a80;
+            --text-main: #eeeeee;
+            --text-muted: #999999;
+            --border-color: #333333;
+            --selected-border: #00adb5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: var(--bg-secondary);
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .title-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .title-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+        }
+
+        /* Custom Tab Switcher (Uploaded Image Style) */
+        .page-tab-switcher {
+            background-color: #ffffff;
+            padding: 4px;
+            border-radius: 30px;
+            display: inline-flex;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .tab-btn {
+            border: none;
+            background: transparent;
+            padding: 8px 18px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #555555;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background-color: #008744;
+            color: #ffffff;
+            box-shadow: 0 2px 6px rgba(0,135,68,0.3);
+        }
+
+        .title-bar h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .stats-badge {
+            background: #252525;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            background-color: #252525;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            min-width: 120px;
+        }
+
+        .btn:hover {
+            background-color: #303030;
+            border-color: var(--text-muted);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: #000000;
+            font-weight: 600;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .btn-danger {
+            background-color: #ff4c4c;
+            color: white;
+            border: none;
+        }
+        
+        .btn-danger:hover {
+            background-color: #cc0000;
+        }
+
+        .btn-warning {
+            background-color: #f0a500;
+            color: black;
+            font-weight: 600;
+            border: none;
+        }
+
+        .btn-warning:hover {
+            background-color: #cf8e00;
+        }
+
+        .btn-info {
+            background-color: #00adb5;
+            color: black;
+            font-weight: bold;
+            border: none;
+        }
+
+        .btn-info:hover {
+            background-color: #007a80;
+        }
+
+        .btn-duplicate {
+            background-color: #8a2be2;
+            color: white;
+            font-weight: 600;
+            border: none;
+        }
+
+        .btn-duplicate:hover {
+            background-color: #6a1b9a;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+            font-weight: 600;
+            border: none;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-send {
+            background-color: #e91e63;
+            color: white;
+            font-weight: 600;
+            border: none;
+        }
+
+        .btn-send:hover {
+            background-color: #c2185b;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .workspace {
+            max-width: 1200px;
+            width: 100%;
+            margin: 20px auto;
+            padding: 0 15px;
+            flex: 1 0 auto;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 15px;
+            fill: var(--text-muted);
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+        }
+
+        @media (min-width: 600px) {
+            .image-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            }
+        }
+
+        .media-card {
+            background-color: var(--bg-secondary);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            aspect-ratio: 3/4;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+            user-select: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .media-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .media-card .card-index {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: var(--text-main);
+            text-align: center;
+            padding: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .media-card.selected {
+            border-color: var(--selected-border);
+            transform: scale(0.96);
+        }
+
+        .media-card .select-checkbox {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 2;
+        }
+
+        .media-card.selected .select-checkbox {
+            opacity: 1;
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .media-card.selected .select-checkbox::after {
+            content: '✓';
+            color: #000;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .media-card:hover .select-checkbox {
+            opacity: 1;
+        }
+
+        .media-card .order-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: var(--accent-color);
+            color: #000;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 10px;
+            z-index: 2;
+            display: none;
+        }
+
+        .media-card.selected .order-badge {
+            display: block;
+        }
+
+        .bottom-action-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--bg-secondary);
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.4);
+            padding: 15px 20px;
+            border-top: 1px solid var(--border-color);
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.1, 0.76, 0.55, 0.94);
+            z-index: 99;
+        }
+
+        .bottom-action-bar.active {
+            transform: translateY(0);
+        }
+
+        .action-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .collage-options {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        select {
+            background-color: #252525;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background-color: #333;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            font-size: 14px;
+            text-align: center;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #252525;
+            border-top: 5px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        .progress-container {
+            width: 80%;
+            max-width: 300px;
+            background-color: #252525;
+            border-radius: 10px;
+            padding: 3px;
+            border: 1px solid var(--border-color);
+            margin-top: 10px;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 12px;
+            background-color: var(--accent-color);
+            border-radius: 8px;
+            transition: width 0.1s linear;
+        }
+
+        .app-footer {
+            text-align: center;
+            padding: 25px 15px;
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.8;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--bg-secondary);
+            flex-shrink: 0;
+            width: 100%;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Page Display Logic */
+        .page-view {
+            display: none;
+        }
+        .page-view.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-container">
+            <div class="title-bar">
+                <div class="title-left">
+                    <!-- New Style Custom Tab Switcher -->
+                    <div class="page-tab-switcher">
+                        <button class="tab-btn active" id="menu-main-btn" onclick="switchPage('main')">Main Page</button>
+                        <button class="tab-btn" id="menu-collage-btn" onclick="switchPage('collage')">Collage Page</button>
+                    </div>
+                    <h1 id="header-title">╰‿╯ ϟ 𝙷𝚊𝚜𝚒𝚋 𝙱𝚛𝚘 (Main Page)</h1>
+                </div>
+                <div class="stats-badge" id="stats-badge">0 টি ফাইল লোড হয়েছে</div>
+            </div>
+            
+            <!-- Dynamic Action Buttons depending on Active Page -->
+            <div class="button-group" id="main-header-buttons">
+                <button class="btn" onclick="selectAllImages()">
+                    সব সিলেক্ট করুন
+                </button>
+                <button class="btn" onclick="document.getElementById('pdf-input').click()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    PDF যোগ করুন
+                </button>
+                <button class="btn" onclick="document.getElementById('image-input').click()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    ছবি যোগ করুন
+                </button>
+                <!-- Newly added Download Selected button in Main Page -->
+                <button class="btn btn-success" onclick="downloadSelectedOrderImages()">
+                    📥 Download
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <input type="file" id="pdf-input" accept="application/pdf" multiple>
+    <input type="file" id="image-input" accept="image/*" multiple>
+
+    <main class="workspace">
+        <!-- 1ST PAGE VIEW: MAIN PAGE -->
+        <div id="main-page-view" class="page-view active">
+            <div class="empty-state" id="empty-state">
+                <svg viewBox="0 0 24 24">
+                    <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z"/>
+                </svg>
+                <p>কোনো ফাইল যোগ করা হয়নি। উপরে বাটনে ক্লিক করে PDF বা ইমেজ সিলেক্ট করুন।</p>
+            </div>
+
+            <div class="image-grid" id="image-grid">
+                <!-- Dynamically Loaded Images will appear here -->
+            </div>
+        </div>
+
+        <!-- 2ND PAGE VIEW: COLLAGE PAGE -->
+        <div id="collage-page-view" class="page-view">
+            <div style="padding: 20px 10px; text-align: center; background: #121212; min-height: 70vh;">
+                <!-- Newly Added File Input Buttons for Collage Page -->
+                <div class="button-group" style="max-width: 500px; margin: 0 auto 20px auto;">
+                    <button class="btn" onclick="document.getElementById('pdf-input').click()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        PDF যোগ করুন
+                    </button>
+                    <button class="btn" onclick="document.getElementById('image-input').click()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                        ছবি যোগ করুন
+                    </button>
+                </div>
+
+                <h3 style="color: #00adb5; font-size: 18px; margin-bottom: 8px;">আপনার তৈরি করা সকল কোলাজ ইমেজ</h3>
+                <p style="color: #999; font-size: 14px; margin-bottom: 20px;">এখানে পূর্বে জেনারেট করা সকল কোলাজ জমা থাকবে। এক ক্লিকে ডাউনলোড করতে অথবা PDF এ কনভার্ট করতে নিচের বাটনগুলো ব্যবহার করুন।</p>
+                
+                <div id="collage-container" style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
+                    <!-- Saved Collages will appear here -->
+                </div>
+
+                <div id="collage-empty-msg" style="color: var(--text-muted); padding: 40px;">
+                    এখনও কোনো কোলাজ তৈরি করা হয়নি। Main Page থেকে ছবি সিলেক্ট করে কোলাজ তৈরি করুন।
+                </div>
+
+                <br><br>
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 50px;">
+                    <button onclick="downloadAllCollages()" style="padding: 12px 24px; background: #00adb5; color: #000; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 15px;">
+                        📥 সবগুলো কোলাজ ডাউনলোড করুন
+                    </button>
+                    <!-- High Quality PDF Conversion Button -->
+                    <button onclick="convertCollagesToHighQualityPdf()" style="padding: 12px 24px; background: #8a2be2; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 15px;">
+                        📄 Convert PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Selection Action Bar -->
+    <div class="bottom-action-bar" id="action-bar">
+        <div class="action-container">
+            <div class="selection-count" id="selection-text">০ টি আইটেম সিলেক্টেড</div>
+            <div class="collage-options">
+                <button class="btn btn-danger" onclick="deleteSelected()">
+                    ডিলিট করুন
+                </button>
+                <button class="btn btn-info" onclick="selectNextTen()">
+                    [Sel(10)]
+                </button>
+                <select id="matrix-select">
+                    <option value="5x2" selected>Matrix 5 × 2 (১০ টি ছবি)</option>
+                    <option value="3x2">Matrix 3 × 2 (৬ টি ছবি)</option>
+                    <option value="4x2">Matrix 4 × 2 (৮ টি ছবি)</option>
+                </select>
+                <!-- Directly generates collage and opens Collage Page -->
+                <button class="btn btn-primary" onclick="sendSelectedToCollagePage()">Collage Page এ নিয়ে যান</button>
+                <!-- NEWLY ADDED: Send original selected images directly to Collage Page without modifications -->
+                <button class="btn btn-send" onclick="sendOriginalImagesToCollage()">Send</button>
+                <button class="btn btn-duplicate" onclick="duplicateImage()">Duplicate</button>
+                <button class="btn btn-warning" onclick="clearAllData()">Clear Data</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Copyright Footer Section -->
+    <footer class="app-footer">
+        <div>Copyright © 2026 HSC 26 এর সকল গাইড ও বই।</div>
+        <div>The App Create By Hasib Bro</div>
+        <div>contact: 01831410991</div>
+    </footer>
+
+    <div class="toast" id="toast-notification"></div>
+
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+        <p id="loading-text" style="color: white; font-weight: 500;">প্রসেস হচ্ছে, দয়া করে অপেক্ষা করুন...</p>
+        <div class="progress-container" id="progress-container" style="display: none;">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+    </div>
+
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        let loadedItems = []; 
+        let selectedIndices = []; 
+        let generatedDataUrlsGlobal = []; // Array storing all saved collages
+        let longPressTimeout = null;
+        let isSelectionMode = false;
+
+        const pdfInput = document.getElementById('pdf-input');
+        const imageInput = document.getElementById('image-input');
+        const imageGrid = document.getElementById('image-grid');
+        const emptyState = document.getElementById('empty-state');
+        const statsBadge = document.getElementById('stats-badge');
+        const actionBar = document.getElementById('action-bar');
+        const selectionText = document.getElementById('selection-text');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+
+        imageInput.addEventListener('change', handleImageUpload);
+        pdfInput.addEventListener('change', handlePdfUpload);
+
+        // Switching between Main Page and Collage Page
+        function switchPage(page) {
+            const mainView = document.getElementById('main-page-view');
+            const collageView = document.getElementById('collage-page-view');
+            const mainBtn = document.getElementById('menu-main-btn');
+            const collageBtn = document.getElementById('menu-collage-btn');
+            const headerTitle = document.getElementById('header-title');
+            const mainHeaderBtns = document.getElementById('main-header-buttons');
+
+            if (page === 'main') {
+                mainView.classList.add('active');
+                collageView.classList.remove('active');
+                mainBtn.classList.add('active');
+                collageBtn.classList.remove('active');
+                headerTitle.innerText = "╰‿╯ ϟ 𝙷𝚊𝚜𝚒𝚋 𝙱𝚛𝚘 (Main Page)";
+                mainHeaderBtns.style.display = "flex";
+                updateUI();
+            } else if (page === 'collage') {
+                mainView.classList.remove('active');
+                collageView.classList.add('active');
+                mainBtn.classList.remove('active');
+                collageBtn.classList.add('active');
+                headerTitle.innerText = "╰‿╯ ϟ 𝙷𝚊𝚜𝚒𝚋 𝙱𝚛𝚘 (Collage Page)";
+                mainHeaderBtns.style.display = "none";
+                actionBar.classList.remove('active');
+                renderCollagePage();
+            }
+        }
+
+        // Helper function to invert colors and convert to B&W
+        function invertCanvasColors(ctx, width, height) {
+            const imageData = ctx.getImageData(0, 0, width, height);
+            const data = imageData.data;
+            for (let j = 0; j < data.length; j += 4) {
+                let r = 255 - data[j];     
+                let g = 255 - data[j + 1]; 
+                let b = 255 - data[j + 2]; 
+
+                let gray = 0.299 * r + 0.587 * g + 0.114 * b;
+
+                data[j]     = gray; 
+                data[j + 1] = gray; 
+                data[j + 2] = gray; 
+            }
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        function updateUI() {
+            if (loadedItems.length === 0) {
+                emptyState.style.display = 'block';
+                imageGrid.style.display = 'none';
+                statsBadge.innerText = "0 টি ফাইল লোড হয়েছে";
+            } else {
+                emptyState.style.display = 'none';
+                imageGrid.style.display = 'grid';
+                statsBadge.innerText = `${loadedItems.length} টি ছবি লোড হয়েছে`;
+            }
+
+            if (selectedIndices.length > 0 && document.getElementById('main-page-view').classList.contains('active')) {
+                actionBar.classList.add('active');
+                selectionText.innerText = `${selectedIndices.length} টি ছবি সিলেক্টেড`;
+            } else {
+                actionBar.classList.remove('active');
+                isSelectionMode = false;
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast-notification');
+            toast.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+
+        function showLoading(text, showProgress = false) {
+            loadingText.innerText = text;
+            if (showProgress) {
+                progressContainer.style.display = 'block';
+                progressBar.style.width = '0%';
+            } else {
+                progressContainer.style.display = 'none';
+            }
+            loadingOverlay.classList.add('active');
+        }
+
+        function updateProgress(percentage) {
+            progressBar.style.width = `${percentage}%`;
+        }
+
+        function hideLoading() {
+            loadingOverlay.classList.remove('active');
+            progressContainer.style.display = 'none';
+        }
+
+        function handleImageUpload(e) {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            showLoading("ছবি প্রসেস করা হচ্ছে...");
+            let processed = 0;
+
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    loadedItems.push({
+                        src: event.target.result,
+                        type: 'image'
+                    });
+                    processed++;
+                    if (processed === files.length) {
+                        renderGrid();
+                        hideLoading();
+                        showToast(`${files.length} টি ছবি সফলভাবে যুক্ত হয়েছে`);
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+            imageInput.value = '';
+        }
+
+        async function handlePdfUpload(e) {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            showLoading("PDF লোড করা হচ্ছে...", true);
+
+            let totalPagesAcrossAllFiles = 0;
+            let loadedPdfObjects = [];
+
+            for (let file of files) {
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    totalPagesAcrossAllFiles += pdf.numPages;
+                    loadedPdfObjects.push(pdf);
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+
+            if (totalPagesAcrossAllFiles === 0) {
+                hideLoading();
+                showToast("PDF ফাইলটি প্রসেস করতে সমস্যা হয়েছে!");
+                return;
+            }
+
+            let pagesProcessedSoFar = 0;
+
+            for (let pdf of loadedPdfObjects) {
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    try {
+                        const page = await pdf.getPage(pageNum);
+                        const viewport = page.getViewport({ scale: 1.5 });
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+
+                        await page.render({ canvasContext: context, viewport: viewport }).promise;
+                        
+                        loadedItems.push({
+                            src: canvas.toDataURL('image/jpeg', 0.85),
+                            type: 'pdf-page'
+                        });
+                        
+                        pagesProcessedSoFar++;
+                        let percentage = Math.round((pagesProcessedSoFar / totalPagesAcrossAllFiles) * 100);
+                        updateProgress(percentage);
+                        loadingText.innerText = `PDF এক্সট্রাক্ট হচ্ছে: ${percentage}% (${pagesProcessedSoFar}/${totalPagesAcrossAllFiles})`;
+                        
+                    } catch (error) {
+                        console.error("PDF Parsing error: ", error);
+                    }
+                }
+            }
+            
+            renderGrid();
+            hideLoading();
+            showToast("PDF পেজগুলো সিরিয়াল অনুযায়ী লোড করা হয়েছে");
+            pdfInput.value = '';
+        }
+
+        function renderGrid() {
+            imageGrid.innerHTML = '';
+            
+            loadedItems.forEach((item, index) => {
+                const orderIndex = selectedIndices.indexOf(index);
+                const isSelected = orderIndex !== -1;
+
+                const card = document.createElement('div');
+                card.className = `media-card ${isSelected ? 'selected' : ''}`;
+                
+                const img = document.createElement('img');
+                img.src = item.src;
+                img.loading = "lazy";
+                card.appendChild(img);
+
+                const label = document.createElement('div');
+                label.className = 'card-index';
+                label.innerText = String(index + 1).padStart(2, '0');
+                card.appendChild(label);
+
+                const checkbox = document.createElement('div');
+                checkbox.className = 'select-checkbox';
+                card.appendChild(checkbox);
+
+                const orderBadge = document.createElement('div');
+                orderBadge.className = 'order-badge';
+                orderBadge.innerText = `#${orderIndex + 1}`;
+                card.appendChild(orderBadge);
+
+                setupInteractionEvents(card, index);
+                imageGrid.appendChild(card);
+            });
+
+            updateUI();
+        }
+
+        function setupInteractionEvents(card, index) {
+            card.addEventListener('click', () => {
+                toggleSelection(index);
+            });
+
+            card.addEventListener('touchstart', () => {
+                longPressTimeout = setTimeout(() => {
+                    isSelectionMode = true;
+                    toggleSelection(index);
+                    if('vibrate' in navigator) navigator.vibrate(50);
+                }, 600);
+            }, { passive: true });
+
+            card.addEventListener('touchend', () => {
+                clearTimeout(longPressTimeout);
+            });
+
+            card.addEventListener('touchmove', () => {
+                clearTimeout(longPressTimeout);
+            }, { passive: true });
+        }
+
+        function toggleSelection(index) {
+            const existingIdx = selectedIndices.indexOf(index);
+            if (existingIdx !== -1) {
+                selectedIndices.splice(existingIdx, 1);
+            } else {
+                selectedIndices.push(index);
+            }
+            renderGrid();
+        }
+
+        function selectAllImages() {
+            if (loadedItems.length === 0) {
+                showToast("সিলেক্ট করার মতো কোনো ছবি নেই!");
+                return;
+            }
+            if (selectedIndices.length === loadedItems.length) {
+                selectedIndices = [];
+                showToast("সব ছবির সিলেকশন বাতিল করা হয়েছে");
+            } else {
+                selectedIndices = [];
+                for (let i = 0; i < loadedItems.length; i++) {
+                    selectedIndices.push(i);
+                }
+                showToast("সবগুলো ছবি সফলভাবে সিলেক্ট করা হয়েছে");
+            }
+            renderGrid();
+        }
+
+        function selectNextTen() {
+            if (loadedItems.length === 0) {
+                showToast("কোনো ছবি লোড করা নেই!");
+                return;
+            }
+
+            let startIndex = 0;
+            if (selectedIndices.length > 0) {
+                const maxSelected = Math.max(...selectedIndices);
+                startIndex = maxSelected + 1;
+            }
+
+            let addedCount = 0;
+            const targetCount = 10;
+
+            for (let i = startIndex; i < loadedItems.length && addedCount < targetCount; i++) {
+                if (!selectedIndices.includes(i)) {
+                    selectedIndices.push(i);
+                    addedCount++;
+                }
+            }
+
+            if (addedCount < targetCount) {
+                for (let i = 0; i < startIndex && addedCount < targetCount; i++) {
+                    if (!selectedIndices.includes(i)) {
+                        selectedIndices.push(i);
+                        addedCount++;
+                    }
+                }
+            }
+
+            if (addedCount > 0) {
+                renderGrid();
+                showToast(`নতুন ${addedCount} টি ছবি যোগ হয়েছে (মোট: ${selectedIndices.length} টি)`);
+            } else {
+                showToast("সিলেক্ট করার মতো কোনো নতুন ছবি নেই!");
+            }
+        }
+
+        function duplicateImage() {
+            if (selectedIndices.length === 0) {
+                showToast("ডুপ্লিকেট করার জন্য একটি ছবি সিলেক্ট করুন!");
+                return;
+            }
+
+            if (selectedIndices.length > 1) {
+                showToast("একসাথে একের অধিক ছবি ডুপ্লিকেট করা সম্ভব নয়!");
+                return;
+            }
+
+            const targetIndex = selectedIndices[0];
+            const originalItem = loadedItems[targetIndex];
+
+            const duplicatedItem = {
+                src: originalItem.src,
+                type: originalItem.type
+            };
+
+            const insertPosition = targetIndex + 1;
+            loadedItems.splice(insertPosition, 0, duplicatedItem);
+
+            selectedIndices = [];
+
+            renderGrid();
+            showToast(`ছবিটি সফলভাবে ডুপ্লিকেট করে ${insertPosition + 1} নম্বর অর্ডারে যুক্ত করা হয়েছে!`);
+        }
+
+        function deleteSelected() {
+            if (selectedIndices.length === 0) return;
+            
+            const confirmDelete = confirm("আপনি কি নির্বাচিত ছবিগুলো মুছে ফেলতে চান?");
+            if (!confirmDelete) return;
+
+            const indicesToDelete = [...selectedIndices].sort((a, b) => b - a);
+            
+            indicesToDelete.forEach(index => {
+                loadedItems.splice(index, 1);
+            });
+            
+            selectedIndices = [];
+            renderGrid();
+            showToast("নির্বাচিত ছবিগুলো সফলভাবে মুছে ফেলা হয়েছে!");
+        }
+
+        function clearAllData() {
+            const confirmClear = confirm("আপনি কি আপলোড করা সমস্ত ডাটা সম্পূর্ণ মুছে ফেলতে চান?");
+            if (!confirmClear) return;
+            
+            loadedItems = [];
+            selectedIndices = [];
+            generatedDataUrlsGlobal = [];
+            pdfInput.value = '';
+            imageInput.value = '';
+            
+            renderGrid();
+            renderCollagePage();
+            showToast("সমস্ত ডাটা সফলভাবে ক্লিয়ার করা হয়েছে!");
+        }
+
+        /* 3. NEW BUTTON FUNCTIONALITY: Main Page Download Selected Order Images */
+        function downloadSelectedOrderImages() {
+            if (selectedIndices.length === 0) {
+                showToast("ডাউনলোড করার জন্য অন্তত ১টি ছবি সিলেক্ট করুন!");
+                return;
+            }
+
+            showToast(`${selectedIndices.length} টি ছবি ডাউনলোড হচ্ছে...`);
+
+            selectedIndices.forEach((itemIdx, order) => {
+                setTimeout(() => {
+                    const item = loadedItems[itemIdx];
+                    const link = document.createElement('a');
+                    link.href = item.src;
+                    link.download = `Selected_Image_Order_${order + 1}.jpg`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }, order * 300);
+            });
+        }
+
+        /* NEW FUNCTION: Send original selected images directly to Collage Page */
+        function sendOriginalImagesToCollage() {
+            if (selectedIndices.length === 0) {
+                showToast("অনুগ্রহ করে প্রথমে ছবি সিলেক্ট করুন!");
+                return;
+            }
+
+            // Push original selected images to global collage list in order
+            selectedIndices.forEach(idx => {
+                generatedDataUrlsGlobal.push(loadedItems[idx].src);
+            });
+
+            const count = selectedIndices.length;
+            renderGrid();
+            switchPage('collage');
+            showToast(`${count} টি ছবি সফলভাবে Collage Page এ পাঠানো হয়েছে!`);
+        }
+
+        /* Send Selected Images to Collage Page & Generate Collages */
+        async function sendSelectedToCollagePage() {
+            if (selectedIndices.length === 0) {
+                showToast("অনুগ্রহ করে প্রথমে ছবি সিলেক্ট করুন!");
+                return;
+            }
+
+            const matrixConfig = document.getElementById('matrix-select').value;
+            const [rows, cols] = matrixConfig.split('x').map(Number);
+            const itemsPerCollage = rows * cols;
+
+            const itemsToProcess = selectedIndices.map(idx => loadedItems[idx]);
+            const totalCollages = Math.ceil(itemsToProcess.length / itemsPerCollage);
+
+            showLoading(`উচ্চমানের ${totalCollages} টি কোলাজ তৈরি হচ্ছে...`);
+
+            const a4Width = 2480; 
+            const a4Height = 3508; 
+            const edgeMarginX = 60; 
+            const edgeMarginY = 80; 
+            const gapBetweenCells = 40; 
+
+            const availableWidth = a4Width - (2 * edgeMarginX) - ((cols - 1) * gapBetweenCells);
+            const cellWidth = availableWidth / cols;
+
+            const availableHeight = a4Height - (2 * edgeMarginY) - ((rows - 1) * gapBetweenCells);
+            const cellHeight = availableHeight / rows;
+
+            const loadImageAsync = (src) => {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.crossOrigin = 'Anonymous';
+                    img.onload = () => resolve(img);
+                    img.onerror = () => reject(new Error("Image loading failed"));
+                    img.src = src;
+                });
+            };
+
+            try {
+                for (let collageIndex = 0; collageIndex < totalCollages; collageIndex++) {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = a4Width;
+                    canvas.height = a4Height;
+                    const ctx = canvas.getContext('2d');
+
+                    ctx.fillStyle = '#000000';
+                    ctx.fillRect(0, 0, a4Width, a4Height);
+
+                    const startIdx = collageIndex * itemsPerCollage;
+                    const endIdx = Math.min(startIdx + itemsPerCollage, itemsToProcess.length);
+                    let currentItemIndex = startIdx;
+
+                    for (let r = 0; r < rows; r++) {
+                        for (let c = 0; c < cols; c++) {
+                            if (currentItemIndex >= endIdx) break;
+
+                            const item = itemsToProcess[currentItemIndex];
+                            
+                            try {
+                                const imgObj = await loadImageAsync(item.src);
+
+                                const posX = edgeMarginX + c * (cellWidth + gapBetweenCells);
+                                const posY = edgeMarginY + r * (cellHeight + gapBetweenCells);
+
+                                const imageWidth = imgObj.width;
+                                const imageHeight = imgObj.height;
+                                
+                                const imgRatio = imageWidth / imageHeight;
+                                const cellRatio = cellWidth / cellHeight;
+
+                                let srcX = 0, srcY = 0, srcWidth = imageWidth, srcHeight = imageHeight;
+
+                                if (imgRatio > cellRatio) {
+                                    srcWidth = imageHeight * cellRatio;
+                                    srcX = (imageWidth - srcWidth) / 2;
+                                } else {
+                                    srcHeight = imageWidth / cellRatio;
+                                    srcY = (imageHeight - srcHeight) / 2;
+                                }
+
+                                ctx.drawImage(imgObj, srcX, srcY, srcWidth, srcHeight, posX, posY, cellWidth, cellHeight);
+
+                                ctx.strokeStyle = '#FFFFFF';
+                                ctx.lineWidth = 1;
+                                ctx.strokeRect(posX, posY, cellWidth, cellHeight);
+
+                            } catch (e) {
+                                console.error("Frame compilation failure", e);
+                            }
+                            
+                            currentItemIndex++;
+                        }
+                    }
+
+                    invertCanvasColors(ctx, a4Width, a4Height);
+
+                    const watermarkText = "The PDF Create By HASIB BRO";
+                    ctx.font = "24px 'Segoe UI', Arial, sans-serif";
+                    ctx.textAlign = "right";
+                    ctx.textBaseline = "bottom";
+                    
+                    ctx.fillStyle = "#000000";
+                    ctx.fillText(watermarkText, a4Width - edgeMarginX, a4Height - (edgeMarginY / 2));
+
+                    // Store generated collages globally
+                    generatedDataUrlsGlobal.push(canvas.toDataURL('image/jpeg', 0.95));
+                }
+
+                hideLoading();
+                renderGrid();
+                
+                switchPage('collage');
+                showToast(`নতুন ${totalCollages} টি কোলাজ তৈরি করে Collage Page এ যুক্ত করা হয়েছে!`);
+            } catch (err) {
+                console.error("Export operation dropped", err);
+                hideLoading();
+                showToast("কোলাজ তৈরি করতে অভ্যন্তরীণ সমস্যা হয়েছে!");
+            }
+        }
+
+        /* Render Collage Page Images */
+        function renderCollagePage() {
+            const collageContainer = document.getElementById('collage-container');
+            const emptyMsg = document.getElementById('collage-empty-msg');
+
+            collageContainer.innerHTML = '';
+
+            if (generatedDataUrlsGlobal.length === 0) {
+                emptyMsg.style.display = 'block';
+                return;
+            }
+
+            emptyMsg.style.display = 'none';
+
+            generatedDataUrlsGlobal.forEach((dataUrl, index) => {
+                const card = document.createElement('div');
+                card.style.cssText = "border: 2px solid #333; border-radius: 8px; overflow: hidden; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 100%; max-width: 500px;";
+                
+                card.innerHTML = `
+                    <div style="background-color: #252525; padding: 8px 12px; color: #00adb5; font-size: 14px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+                        <span>Collage Page ${index + 1}</span>
+                        <button onclick="deleteSingleCollage(${index})" style="background: none; border: none; color: #ff4c4c; cursor: pointer; font-size: 14px;">🗑️ Delete</button>
+                    </div>
+                    <img src="${dataUrl}" style="width: 100%; display: block; height: auto;">
+                `;
+
+                collageContainer.appendChild(card);
+            });
+        }
+
+        function deleteSingleCollage(index) {
+            generatedDataUrlsGlobal.splice(index, 1);
+            renderCollagePage();
+            showToast("কোলাজটি মুছে ফেলা হয়েছে!");
+        }
+
+        /* Download All Collages as Images */
+        function downloadAllCollages() {
+            if (!generatedDataUrlsGlobal || generatedDataUrlsGlobal.length === 0) {
+                showToast("ডাউনলোড করার জন্য কোনো কোলাজ নেই!");
+                return;
+            }
+
+            generatedDataUrlsGlobal.forEach((dataUrl, idx) => {
+                setTimeout(() => {
+                    const link = document.createElement('a');
+                    link.href = dataUrl;
+                    link.download = `Collage_Page_${idx + 1}.jpg`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }, idx * 400);
+            });
+
+            showToast("সবগুলো কোলাজ ডাউনলোড শুরু হয়েছে!");
+        }
+
+        /* 2. HIGH-QUALITY CONVERT TO PDF FUNCTION (Collage Page) */
+        async function convertCollagesToHighQualityPdf() {
+            if (!generatedDataUrlsGlobal || generatedDataUrlsGlobal.length === 0) {
+                showToast("PDF কনভার্ট করার জন্য কোনো কোলাজ তৈরি করা নেই!");
+                return;
+            }
+
+            showLoading("একদম High-Quality PDF ফাইল রেডি করা হচ্ছে...");
+
+            try {
+                const { jsPDF } = window.jspdf;
+                
+                // Set A4 Canvas dimensions in points
+                const doc = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'pt',
+                    format: 'a4',
+                    compress: true
+                });
+
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+
+                const loadImageAsync = (src) => {
+                    return new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.crossOrigin = 'Anonymous';
+                        img.onload = () => resolve(img);
+                        img.onerror = () => reject(new Error("Image Loading Failed"));
+                        img.src = src;
+                    });
+                };
+
+                for (let i = 0; i < generatedDataUrlsGlobal.length; i++) {
+                    const dataUrl = generatedDataUrlsGlobal[i];
+                    const img = await loadImageAsync(dataUrl);
+
+                    if (i > 0) {
+                        doc.addPage();
+                    }
+
+                    // Render to fill entire High Quality A4 Canvas
+                    doc.addImage(img, 'JPEG', 0, 0, pageWidth, pageHeight, undefined, 'SLOW');
+                }
+
+                doc.save('Hasib_Bro_Collages_HighQuality.pdf');
+                hideLoading();
+                showToast("উচ্চমানের PDF সফলভাবে ডাউনলোড করা হয়েছে!");
+
+            } catch (err) {
+                console.error("PDF Compilation Failed: ", err);
+                hideLoading();
+                showToast("PDF তৈরি করতে ড্রপ সমস্যা হয়েছে!");
+            }
+        }
+    </script>
+</body>
+  </html>
